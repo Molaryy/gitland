@@ -1,2 +1,2 @@
 # gitland
-Gitcoing using the GNO technology
+Gitcoin using the GNO technology
