@@ -1,0 +1,65 @@
+.projects {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 5rem;
+    gap: 2rem;
+}
+
+.project-container {
+    width: 100%;
+    max-width: 300px;
+    height: 400px;
+    background-color: #f2f2fb;
+    border-radius: 10px;
+    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.project-container img {
+    width: 100%; /* Ensure the image fills the container */
+    height: 150px;
+    border-radius: 10px;
+}
+
+.project-text-container {
+    width: 100%;
+    height: 200px;
+}
+
+#project-name {
+    margin-left: 1rem;
+    font-family: "Radio Canada Big", sans-serif;
+}
+
+#project-description {
+    font-family: "Radio Canada Big", sans-serif;
+    font-weight: lighter;
+    font-size: 14.5px;
+    margin-left: 1rem;
+    margin-top: 10px;
+}
+
+#project-button-donate {
+    width: 180px;
+    height: 30px;
+    border: none;
+    background-color: #ae36dd;
+    border-radius: 5px;
+    color: white;
+    margin-left: 4rem;
+    display: flex;
+    align-items: center;
+    gap: -15px;
+    justify-content: center;
+    padding-left: 4rem;
+    cursor: pointer;
+}
+
+#gift-box-button {
+    width: 20px;
+    height: 20px;
+    margin-left: auto;
+    color: white;
+}
+
