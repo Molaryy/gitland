@@ -1,8 +1,8 @@
 type Stats = {
-    fundingReceived: number,
-    contributions: number,
-    uniqueContributions: number,
-    roundsParticipated: number,
+        fundingReceived: number,
+        contributions: number,
+        uniqueContributions: number,
+        roundsParticipated: number,
 }
 
 export type Project = {
