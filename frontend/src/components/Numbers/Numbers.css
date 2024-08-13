@@ -1,0 +1,14 @@
+.numbers {
+    width: 400px;
+    height: 500px;
+    background-color: #f2f2fb;
+    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    margin-left: 2.5rem;
+    margin-top: 1rem;
+}
+
+.numbers h2 {
+    text-align: center;
+    padding: 1rem 0 0 0;
+}

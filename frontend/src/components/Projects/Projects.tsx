@@ -18,17 +18,20 @@ const Projects = () => {
         return description.substring(0, 300) + "...";
     };
 
+    const goToProjectID = (projectID: number) => {
+        console.log("Clicked on id: ", projectID)
+    }
 
     return (
         <div className={"projects"}>
             {projects.map((item) => (
-                <div className={"project-container"}>
-                    <img src={item.backgroundImg} alt={"project-background-image"}/>
+                <div key={item.id} className={"project-container"}>
+                    <img  src={item.backgroundImg} alt={"project-background-image"}/>
                     <div className={"project-text-container"}>
                         <h3 id={"project-name"}>{item.name}</h3>
                         <p id={"project-description"}>{ limitSizeDescription(item.description)}</p>
                     </div>
-                    <button id={"project-button-donate"}>Donate <img id={"gift-box-button"} src={giftBox} alt={"gift-box"}/> </button>
+                    <button id={"project-button-donate"} onClick={() => goToProjectID(item.id)}>Donate <img id={"gift-box-button"} src={giftBox} alt={"gift-box"}/> </button>
                 </div>
             ))}
         </div>
