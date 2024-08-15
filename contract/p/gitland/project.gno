@@ -5,7 +5,7 @@ import (
 )
 
 type Project struct {
-	ID uint64
+	id uint64
 	name string
 	description string
 	backgroundImageCID string
@@ -13,16 +13,16 @@ type Project struct {
 	websiteLink string
 	creationDate time.Time
 	roundEndDate time.Time
-	daysLeft uint64
-	stats Stats
+	daysLeft int
+	stats *Stats
 }
 
 
 func (p *Project) GetID() uint64 {
-	return p.ID
+	return p.id
 }
 
-func (p *Project) Getname() string {
+func (p *Project) GetName() string {
 	return p.name
 }
 
@@ -50,20 +50,28 @@ func (p *Project) GetRoundEndDate() time.Time {
 	return p.roundEndDate
 }
 
-func (p *Project) GetDaysLeft() uint64 {
+func (p *Project) GetDaysLeft() int {
 	return p.daysLeft
 }
 
-func (p *Project) Getstats() Stats {
+func (p *Project) GetStats() *Stats {
 	return p.stats
 }
 
-func (p *Project) GetDaysLeft() uint64 {
-	// TODO
+func GetDaysLeft(roundEndDate time.Time) int {
+	untilDuration := time.Until(roundEndDate)
+
+	return int(untilDuration.Hours() / 24)
 }
 
 func (p *Project) UpdateDaysLeft() bool {
-	// TODO
+	p.daysLeft = GetDaysLeft(p.roundEndDate)
+
+	if p.daysLeft <= 0 {
+		return false
+	} else {
+		return true
+	}
 }
 
 func InitProject(
@@ -75,19 +83,24 @@ func InitProject(
 	websiteLink string,
 	creationDate time.Time,
 	roundEndDate time.Time,
-) *Project {
-	var stats Stats
+) (*Project, error) {
+	// TODO: add real error handling here
 
 	return &Project{
-		ID: ID,
+		id: ID,
 		name: name,
 		description: description,
-		backgroundImageCID: backgroundImage,
-		profileImageCID: profileImage,
+		backgroundImageCID: backgroundImageCID,
+		profileImageCID: profileImageCID,
 		websiteLink: websiteLink,
 		creationDate: creationDate,
 		roundEndDate: roundEndDate,
-		daysLeft: 0 // set days left,
-		stats: stats,
-	}
+		daysLeft: GetDaysLeft(roundEndDate),
+		stats: &Stats{
+			fundingReceived: 0,
+    		contributions: 0,
+    		uniqueContributions: 0,
+    		roundsParticipated: 0,
+		},
+	}, nil
 }
