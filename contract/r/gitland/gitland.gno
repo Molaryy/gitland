@@ -1,12 +1,18 @@
 package gitland
 
 import (
+	"std"
 	"time"
 	"errors"
 	"gno.land/p/demo/ufmt"
 	"gno.land/p/demo/avl"
 	"gno.land/p/molaryy/gitland"
 	"gno.land/p/demo/json"
+)
+
+const (
+	gitlandAddress std.Address = "g199esk77thuk3lhzz2ktmkgffk7d9eh7hn0kmqt"
+	comission int64 = 20
 )
 
 var (
@@ -22,6 +28,7 @@ var (
 	totalFunds uint64
 )
 
+
 func init() {
 	projects = avl.NewTree()
 }
@@ -32,6 +39,7 @@ func getStringDate(t time.Time) string {
 	month :=int(t.Month())
 	return ufmt.Sprintf("%d", t.Day()) + "/" + ufmt.Sprintf("%d", month) + "/" + ufmt.Sprintf("%d", t.Year())
 }
+
 
 func checkEndDateWithCurrentDate(
 	endYear int,
@@ -71,10 +79,11 @@ func CreateProject(
 	endMonth int,
 	endDay int,
 ) {
+	caller := std.GetOrigCaller()
 	var prflImg *string
 	var endDate time.Time = time.Now()
 	var currentTime time.Time = endDate
-	
+
 
 	if profileImageCID == "" {
 		*prflImg = profileImageCID
@@ -84,9 +93,10 @@ func CreateProject(
 
 	checkEndDateWithCurrentDate(endYear, endMonth, endDay, currentTime)
 	endDate.AddDate(endYear, endMonth, endDay)
-	project, err := gitland.InitProject(
+	project := gitland.InitProject(
 		projectID,
 		name,
+		caller,
 		description,
 		backgroundImageCID,
 		prflImg,
@@ -95,15 +105,40 @@ func CreateProject(
 		endDate,
 	)
 
-	if err != nil {
-		panic(err)
-	}
-
 	projects.Set(ufmt.Sprintf("%d", projectID), project)
 	projectID++
+	nbProjectsRaised++
 }
 
-/* Each time GetProjects and GetProjectByID are called, call a function update days left */
+func DonateProjectByID(ID string) {
+	coinSent := std.GetOrigSend()
+	banker := std.GetBanker(std.BankerTypeOrigSend)
+	realmAddr := std.CurrentRealm().Addr()
+	it, ok := projects.Get(ID)
+
+	if coinSent.AmountOf("ugnot") < comission + 1 {
+		panic(errors.New("You should at least send " + ufmt.Sprintf("%d", comission + 1) + "ugnot"))
+	}
+
+	if ok == false {
+		panic(errors.New("Project id not found"))
+	}
+
+	project := it.(*gitland.Project)
+
+	if project == nil {
+		panic("The project found is null")
+	}
+
+	var coin std.Coin = std.NewCoin("ugnot", comission)
+
+	banker.SendCoins(realmAddr, gitlandAddress, std.Coins{coin})
+	coinsToSendAfterComission := coinSent[0].Sub(coin)
+	banker.SendCoins(realmAddr, project.GetOwner(), std.Coins{coinsToSendAfterComission})
+	uDonations++
+	totalFunds += uint64(std.Coins{coinsToSendAfterComission}.AmountOf("ugnot"))
+}
+
 
 func getProjectHTML(project *gitland.Project) string {
 	projectsStr := ""
@@ -113,7 +148,6 @@ func getProjectHTML(project *gitland.Project) string {
 	projectsStr += "<p><b>Project link</b>: " + project.GetWebsiteLink() + "</p>"
 	projectsStr += "<p><b>Creation date</b>: " + getStringDate(project.GetCreationDate()) + "</p>"
 	projectsStr += "<p><b>Round end date</b>: " + getStringDate(project.GetRoundEndDate()) + "</p>"
-	projectsStr += "<p><b>Days left</b>: " + ufmt.Sprintf("%d", project.GetDaysLeft()) + "</p></div>"
 	return projectsStr
 }
 
@@ -148,7 +182,6 @@ func getProjectJSON(project *gitland.Project) *json.Node {
 		"websiteLink": json.StringNode("websiteLink", project.GetWebsiteLink()),
 		"creationDate": json.StringNode("creationDate", getStringDate(project.GetCreationDate())),
 		"roundEndDate": json.StringNode("roundEndDate", getStringDate(project.GetRoundEndDate())),
-		"daysLeft": json.NumberNode("daysLeft", float64(project.GetDaysLeft())),
 		"stats": json.ObjectNode("stats", map[string]*json.Node{
 			"fundingReceived": json.NumberNode("fundingReceived", float64(stats.GetFundingReceived())),
 			"contributions": json.NumberNode("contributions", float64(stats.GetContributions())),
@@ -159,16 +192,17 @@ func getProjectJSON(project *gitland.Project) *json.Node {
 	return projectFields
 }
 
-func GetProjects() string {
+func GetProjectsJSON() string {
 	projectsJson := json.ArrayNode("", []*json.Node{})
+	projectObject := json.ObjectNode("", map[string]*json.Node{})
 
 	projects.Iterate("", "", func(id string, it interface{}) bool {
 		project := it.(*gitland.Project)
 		projectFields := getProjectJSON(project)
-		ufmt.Println(projectFields)
-		projectsJson.AppendObject(ufmt.Sprintf("%d", project.GetID()), projectFields)
+		projectObject.AppendObject(ufmt.Sprintf("%d", project.GetID()), projectFields)
 		return false
 	})
+	projectsJson.AppendArray(projectObject)
 	encoded, err := json.Marshal(projectsJson)
 	if err != nil {
 		panic(err)
@@ -176,8 +210,8 @@ func GetProjects() string {
 	return string(encoded)
 }
 
-func GetProjectByID(ID uint64) string {
-	it, ok := projects.Get(ufmt.Sprintf("%d", ID))
+func GetProjectByIDJSON(ID string) string {
+	it, ok := projects.Get(ID)
 
 	if ok == false {
 		panic(errors.New("Project id not found"))
@@ -198,9 +232,6 @@ func GetProjectByID(ID uint64) string {
 	return string(encoded)
 }
 
-
-/* STATS */
-
 func GetGitLandStats() (uint64, uint64, uint64) {
 	return uDonations, nbProjectsRaised, totalFunds
 }
@@ -208,7 +239,7 @@ func GetGitLandStats() (uint64, uint64, uint64) {
 func Render(path string) string {
 	nbDonations := "<h1>Unique donations: " + ufmt.Sprintf("%d", uDonations) + "</h1>"
 	nbProjectsRaised := "<h1>Projects raised funds: " + ufmt.Sprintf("%d", nbProjectsRaised) + "</h1>"
-	tFunds :=  "<h1>Total funds: " + ufmt.Sprintf("%d", totalFunds) + "$</h1>"
+	tFunds :=  "<h1>Total funds: " + ufmt.Sprintf("%d", totalFunds) + " UGNOT</h1>"
 	projectsToRender := "<h1>Projects</h1>" + getProjectsToRender()
 
 	_, ok := projects.Get(path)

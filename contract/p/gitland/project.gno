@@ -2,21 +2,21 @@ package gitland
 
 import (
 	"time"
+	"std"
 )
 
 type Project struct {
 	id uint64
 	name string
+	owner std.Address
 	description string
 	backgroundImageCID string
 	profileImageCID *string
 	websiteLink string
 	creationDate time.Time
 	roundEndDate time.Time
-	daysLeft int
 	stats *Stats
 }
-
 
 func (p *Project) GetID() uint64 {
 	return p.id
@@ -50,57 +50,40 @@ func (p *Project) GetRoundEndDate() time.Time {
 	return p.roundEndDate
 }
 
-func (p *Project) GetDaysLeft() int {
-	return p.daysLeft
-}
-
 func (p *Project) GetStats() *Stats {
 	return p.stats
 }
 
-func GetDaysLeft(roundEndDate time.Time) int {
-	untilDuration := time.Until(roundEndDate)
-
-	return int(untilDuration.Hours() / 24)
-}
-
-func (p *Project) UpdateDaysLeft() bool {
-	p.daysLeft = GetDaysLeft(p.roundEndDate)
-
-	if p.daysLeft <= 0 {
-		return false
-	} else {
-		return true
-	}
+func (p *Project) GetOwner() std.Address {
+	return p.owner
 }
 
 func InitProject(
 	ID uint64,
 	name string,
+	owner std.Address,
 	description string,
 	backgroundImageCID string,
 	profileImageCID *string,
 	websiteLink string,
 	creationDate time.Time,
 	roundEndDate time.Time,
-) (*Project, error) {
-	// TODO: add real error handling here
-
+) *Project {
 	return &Project{
 		id: ID,
 		name: name,
+		owner: owner,
 		description: description,
 		backgroundImageCID: backgroundImageCID,
 		profileImageCID: profileImageCID,
 		websiteLink: websiteLink,
 		creationDate: creationDate,
 		roundEndDate: roundEndDate,
-		daysLeft: GetDaysLeft(roundEndDate),
 		stats: &Stats{
 			fundingReceived: 0,
     		contributions: 0,
     		uniqueContributions: 0,
     		roundsParticipated: 0,
 		},
-	}, nil
+	}
 }
